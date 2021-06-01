@@ -1,0 +1,21 @@
+name: "Matrix chat message"
+description: "Send a message to the matrix chat"
+inputs:
+  message:
+    description: "Simple text message to send"
+    required: true
+  chat-id:
+    description: "The ID of the chat"
+    required: true
+  authentication-token:
+    description: "Token for user with rights to send the message"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        curl "https://matrix.org/_matrix/client/r0/rooms/${{ inputs.chat-id }}/send/m.room.message/$(uuidgen)" \
+        -H "Authorization: Bearer ${{ inputs.authentication-token }}" \
+        -X PUT \
+        --data "{\"msgtype\": \"m.text\", \"body\": \"${{ inputs.message }}\"}"
+      shell: bash
