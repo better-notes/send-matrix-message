@@ -1,0 +1,26 @@
+name: "Matrix chat message"
+description: "Send a message to the matrix chat"
+inputs:
+  message:
+    description: "Simple text message to send"
+    required: true
+  chat-id:
+    description: "The ID of the chat"
+    required: true
+  authentication-token:
+    description: "Token for user with rights to send the message"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - run: |
+        curl "https://matrix.org/_matrix/client/r0/rooms/${{ inputs.chat-id }}/send/m.room.message/$(uuidgen)" \
+        -H "Authorization: Bearer ${{ inputs.authentication-token }}" \
+        -H "Content-Type: application/json" \
+        -X PUT \
+        --data "$(jq -c -n --arg msgtype "m.text" --arg body "${{ inputs.message }}" '{msgtype: $msgtype, body: $body}')" \
+        > matrix_response_body.json
+
+        echo "Response body was $(cat matrix_response_body.json)"
+        if [[ -z "$(cat matrix_response_body.json | jq -r .event_id | tr -d '\n')" ]]; then (exit 1) fi
+      shell: bash
